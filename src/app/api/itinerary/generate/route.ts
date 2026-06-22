@@ -1,17 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { buildItineraryPrompt } from "@/lib/prompts/itinerary";
 import { createTripWithItinerary } from "@/lib/db/trips";
 import { stripGroqJson } from "@/lib/trip-utils";
 import type { TripFormData, GeneratedItinerary } from "@/types/trip";
 
-const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+// Wide model list — REST API skips any that aren't available for this key
+const GEMINI_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-preview-05-20",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-2.0-flash-exp",
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+];
 const GROQ_MODELS = [
   { id: "llama-3.1-8b-instant", maxTokens: 6000 },
   { id: "gemma2-9b-it",         maxTokens: 6000 },
 ];
+
+async function callGeminiRest(prompt: string, apiKey: string): Promise<string> {
+  let lastErr = "";
+  for (const model of GEMINI_MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 8192, temperature: 0.7 },
+          }),
+          signal: AbortSignal.timeout(60_000),
+        }
+      );
+      const data = await res.json() as {
+        candidates?: { content: { parts: { text: string }[] } }[];
+        error?: { code: number; message: string };
+      };
+      if (!res.ok) {
+        // 429 = rate limit, bubble up immediately
+        if (res.status === 429 || data.error?.code === 429) {
+          throw Object.assign(new Error(data.error?.message ?? "Rate limited"), { status: 429 });
+        }
+        lastErr = data.error?.message ?? `HTTP ${res.status}`;
+        console.warn(`[gemini] ${model} skipped: ${lastErr}`);
+        continue;
+      }
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      if (text) return text;
+    } catch (err) {
+      if ((err as { status?: number }).status === 429) throw err;
+      lastErr = err instanceof Error ? err.message : String(err);
+      console.warn(`[gemini] ${model} error:`, lastErr);
+    }
+  }
+  throw new Error(`Gemini: all models unavailable. Last error: ${lastErr}`);
+}
 
 function isRateLimit(err: unknown): boolean {
   if (typeof err === "object" && err !== null && "status" in err) {
@@ -143,22 +192,13 @@ export async function POST(request: NextRequest) {
 
         // ── Gemini first (1M TPM, 1500 RPD free) ─────────────────────────────
         if (process.env.GOOGLE_AI_API_KEY) {
-          const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-          for (const modelName of GEMINI_MODELS) {
-            try {
-              const model = genAI.getGenerativeModel(
-                { model: modelName, generationConfig: { maxOutputTokens: 8192, temperature: 0.7 } },
-                { apiVersion: "v1" }
-              );
-              const result = await model.generateContent(prompt);
-              fullText = result.response.text();
-              if (fullText) { geminiErr = null; break; }
-            } catch (err) {
-              geminiErr = err instanceof Error ? err.message : String(err);
-              if (isRateLimit(err)) lastRateLimitErr = err;
-              console.warn(`[generate] gemini/${modelName} failed:`, geminiErr);
-              fullText = "";
-            }
+          try {
+            fullText = await callGeminiRest(prompt, process.env.GOOGLE_AI_API_KEY);
+            geminiErr = null;
+          } catch (err) {
+            geminiErr = err instanceof Error ? err.message : String(err);
+            if (isRateLimit(err)) lastRateLimitErr = err;
+            console.warn("[generate] Gemini failed:", geminiErr);
           }
         }
 
