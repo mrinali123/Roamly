@@ -7,8 +7,8 @@ import { stripGroqJson } from "@/lib/trip-utils";
 import type { TripFormData, GeneratedItinerary } from "@/types/trip";
 
 const GROQ_MODELS = [
-  { id: "llama-3.1-8b-instant", maxTokens: 8000 },
-  { id: "gemma2-9b-it",         maxTokens: 7000 },
+  { id: "llama-3.1-8b-instant",          maxTokens: 8000 },
+  { id: "llama-3.3-70b-specdec",         maxTokens: 8000 },
 ];
 
 
