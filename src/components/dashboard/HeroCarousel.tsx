@@ -94,13 +94,6 @@ export default function HeroCarousel({ userName }: HeroCarouselProps) {
             <Plus size={16} />
             Plan new trip
           </Link>
-          <Link
-            href="#trips"
-            className="ghost-btn"
-            style={{ padding: "14px 24px", fontSize: 14 }}
-          >
-            View my trips
-          </Link>
         </div>
       </div>
 
