@@ -1,127 +1,137 @@
 # Roamly
 
-A travel itinerary planning app built with Next.js 14, Supabase, Tailwind CSS, and TypeScript.
+**AI-powered travel itinerary planner** — describe your trip once and get a fully structured day-by-day plan with real places, optimal timing, restaurant picks, weather forecasts, and a built-in budget tracker.
 
-## Tech Stack
+Built as a solo full-stack project to explore LLM-driven UX: the interesting challenge was making AI output reliable enough to drive a real UI — parsing streaming JSON, handling model rate limits gracefully, and keeping the experience fast even when generation takes time.
 
-- **Framework**: Next.js 14 (App Router)
-- **Auth & Database**: Supabase
-- **Styling**: Tailwind CSS
-- **Language**: TypeScript
-
-## Phase 1 Features
-
-- Landing page with hero section and feature highlights
-- Email/password authentication (sign up, sign in, sign out)
-- Email verification after sign up
-- Password reset via email link
-- Protected `/dashboard` route — shows welcome message and trip placeholder
-- Session persistence across page refreshes
-- Toast notifications for all auth events
-- Fully responsive, mobile-first design
+**[Live Demo →](https://roamly-ten.vercel.app)**
 
 ---
 
+<!-- SCREENSHOT: drop a GIF or screenshot of the itinerary view here -->
+<!-- Tip: screen-record generating a 3-day trip and export as GIF with LICEcap or Kap -->
+
+---
+
+## Features
+
+- **AI itinerary generation** — Groq-powered, streams progress in real time; respects arrival/departure times, pace preference, budget, interests, dietary needs, and must-visit places
+- **Day-by-day view** — per-day weather forecast, sightseeing places with GPS coordinates and timing rationale, restaurant picks, and quick tips
+- **Interactive map** — Leaflet map with pins for every place across the itinerary
+- **Budget tracker** — log expenses by category, visualize spending with charts
+- **Trip sharing** — public share link or email-invite collaborators
+- **AI chat assistant** — ask questions about your trip, get suggestions, iterate on plans
+- **PDF export** — download the full itinerary as a formatted PDF
+- **Offline support** — PWA with localStorage cache; saved trips work without internet
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Auth & Database | Supabase (Postgres + Row Level Security) |
+| AI | Groq API (`llama-3.1-8b-instant`) |
+| Maps | Leaflet + react-leaflet |
+| Charts | Recharts |
+| PDF | @react-pdf/renderer |
+| Email | Nodemailer (Gmail SMTP) + Resend fallback |
+| Testing | Vitest + Testing Library |
+| Deployment | Vercel |
+
 ## Getting Started
 
-### 1. Clone & Install
+### Prerequisites
+
+- Node.js 18+
+- A [Supabase](https://supabase.com) project
+- A [Groq](https://console.groq.com) API key (free tier works)
+
+### Install
 
 ```bash
-git clone <your-repo-url>
-cd roamly
+git clone https://github.com/mrinali123/Roamly.git
+cd Roamly
 npm install
 ```
 
-### 2. Set Up Supabase
+### Environment variables
 
-1. Go to [supabase.com](https://supabase.com) and create a new project.
-2. In the Supabase dashboard, go to **SQL Editor** and run the contents of [`supabase/schema.sql`](supabase/schema.sql).
-3. In **Authentication → URL Configuration**, add your local dev URL to the **Redirect URLs** list:
-   ```
-   http://localhost:3000/auth/callback
-   ```
-4. In **Authentication → Email Templates**, you can customise the verification and reset emails.
-
-### 3. Configure Environment Variables
-
-Copy the example env file and fill in your values:
+Copy the example file and fill in your values:
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-Open `.env.local` and replace the placeholder values with your Supabase project credentials (found in **Project Settings → API**):
+| Variable | Where to get it |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` for local dev |
+| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) |
+| `RESEND_API_KEY` | [resend.com](https://resend.com) — optional, for invite emails |
+| `GMAIL_USER` | Your Gmail address — for invite emails via SMTP |
+| `GMAIL_APP_PASSWORD` | Google Account → Security → App Passwords |
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+### Database
+
+In the Supabase SQL editor, run the schema:
+
+```bash
+# paste and run the contents of:
+supabase/schema.sql
 ```
 
-### 4. Run the Development Server
+Also add your app URL to Supabase → Authentication → URL Configuration → Redirect URLs:
+```
+http://localhost:3000/auth/callback
+https://your-production-domain.com/auth/callback
+```
+
+### Run locally
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
----
+### Tests
+
+```bash
+npm test
+```
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── auth/
-│   │   ├── callback/route.ts       # Email verification callback
-│   │   ├── forgot-password/page.tsx
-│   │   ├── reset-password/page.tsx
-│   │   ├── signin/page.tsx
-│   │   └── signup/page.tsx
-│   ├── dashboard/page.tsx          # Protected dashboard
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx                    # Landing page
+│   ├── api/                  # API routes (itinerary, chat, share, expenses, PDF export)
+│   ├── auth/                 # Sign in, sign up, reset password pages
+│   ├── dashboard/            # Main dashboard
+│   ├── trips/
+│   │   ├── new/              # Multi-step trip planning form
+│   │   └── [id]/             # Trip detail view + edit
+│   └── share/[token]/        # Public shared trip view (no auth required)
 ├── components/
-│   ├── AuthCard.tsx                # Wrapper card for auth forms
-│   ├── FormInput.tsx               # Reusable labeled input with error
-│   ├── LoadingButton.tsx           # Button with spinner state
-│   ├── Navbar.tsx                  # Top navigation bar
-│   └── ToastProvider.tsx           # react-hot-toast config
+│   ├── itinerary/            # PlaceCard, WeatherCard, MealsCard, DayTimeline
+│   ├── chat/                 # AI chat panel (trip-specific + general)
+│   ├── budget/               # BudgetTracker, ExpenseForm, SpendingChart
+│   ├── dashboard/            # HeroCarousel, TripCard, StatCard
+│   └── ui/                   # Shared primitives (GlassCard, Skeleton, ErrorBoundary)
 ├── lib/
-│   ├── auth.ts                     # Auth helper functions
-│   └── supabase/
-│       ├── client.ts               # Browser Supabase client
-│       ├── middleware.ts           # Session refresh in middleware
-│       └── server.ts               # Server-side Supabase client
-├── middleware.ts                   # Route protection
-└── types/
-    └── index.ts                    # Shared TypeScript types
-supabase/
-└── schema.sql                      # Database schema + RLS + trigger
+│   ├── db/trips.ts           # All Supabase queries
+│   ├── prompts/              # AI prompt builders (itinerary + chat)
+│   └── supabase/             # Client, server, admin, and middleware helpers
+└── types/                    # TypeScript interfaces (trip, budget, weather)
 ```
-
----
-
-## Auth Flow
-
-| Action | Description |
-|---|---|
-| Sign up | Creates Supabase auth user + sends verification email. Profile row auto-created via DB trigger. |
-| Email verify | User clicks link → `/auth/callback` exchanges code for session → redirect to `/dashboard`. |
-| Sign in | Email/password → session cookie set → redirect to `/dashboard`. |
-| Forgot password | Sends Supabase reset email with link to `/auth/reset-password`. |
-| Reset password | User sets new password via the reset form. |
-| Sign out | Clears session, redirect to `/`. |
-| Route guard | Middleware redirects unauthenticated users from `/dashboard` → `/auth/signin`, and authenticated users from `/auth/*` → `/dashboard`. |
-
----
 
 ## Deployment
 
-The app can be deployed to [Vercel](https://vercel.com) with zero config:
+Push to GitHub and import into [Vercel](https://vercel.com). Add all environment variables in Vercel → Project Settings → Environment Variables. No other config needed.
 
-1. Push to GitHub.
-2. Import the repo in Vercel.
-3. Add the two environment variables in Vercel project settings.
-4. Add your production URL to Supabase **Redirect URLs** (e.g. `https://yourdomain.com/auth/callback`).
+## License
+
+MIT
