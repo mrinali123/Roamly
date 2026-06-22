@@ -6,61 +6,11 @@ import { createTripWithItinerary } from "@/lib/db/trips";
 import { stripGroqJson } from "@/lib/trip-utils";
 import type { TripFormData, GeneratedItinerary } from "@/types/trip";
 
-// Wide model list — REST API skips any that aren't available for this key
-const GEMINI_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-preview-05-20",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-2.0-flash-exp",
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
-];
 const GROQ_MODELS = [
   { id: "llama-3.1-8b-instant", maxTokens: 6000 },
   { id: "gemma2-9b-it",         maxTokens: 6000 },
 ];
 
-async function callGeminiRest(prompt: string, apiKey: string): Promise<string> {
-  let lastErr = "";
-  for (const model of GEMINI_MODELS) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 8192, temperature: 0.7 },
-          }),
-          signal: AbortSignal.timeout(60_000),
-        }
-      );
-      const data = await res.json() as {
-        candidates?: { content: { parts: { text: string }[] } }[];
-        error?: { code: number; message: string };
-      };
-      if (!res.ok) {
-        // 429 = rate limit, bubble up immediately
-        if (res.status === 429 || data.error?.code === 429) {
-          throw Object.assign(new Error(data.error?.message ?? "Rate limited"), { status: 429 });
-        }
-        lastErr = data.error?.message ?? `HTTP ${res.status}`;
-        console.warn(`[gemini] ${model} skipped: ${lastErr}`);
-        continue;
-      }
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      if (text) return text;
-    } catch (err) {
-      if ((err as { status?: number }).status === 429) throw err;
-      lastErr = err instanceof Error ? err.message : String(err);
-      console.warn(`[gemini] ${model} error:`, lastErr);
-    }
-  }
-  throw new Error(`Gemini: all models unavailable. Last error: ${lastErr}`);
-}
 
 function isRateLimit(err: unknown): boolean {
   if (typeof err === "object" && err !== null && "status" in err) {
@@ -186,57 +136,35 @@ export async function POST(request: NextRequest) {
 
       try {
         let fullText = "";
-        let geminiErr: string | null = null;
+        let lastErr: unknown = null;
         let lastRateLimitErr: unknown = null;
-        let lastGroqErr: unknown = null;
 
-        // ── Gemini first (1M TPM, 1500 RPD free) ─────────────────────────────
-        if (process.env.GOOGLE_AI_API_KEY) {
+        for (const { id, maxTokens } of GROQ_MODELS) {
           try {
-            fullText = await callGeminiRest(prompt, process.env.GOOGLE_AI_API_KEY);
-            geminiErr = null;
-          } catch (err) {
-            geminiErr = err instanceof Error ? err.message : String(err);
-            if (isRateLimit(err)) lastRateLimitErr = err;
-            console.warn("[generate] Gemini failed:", geminiErr);
-          }
-        }
-
-        // ── Groq fallback ─────────────────────────────────────────────────────
-        if (!fullText) {
-          for (const { id, maxTokens } of GROQ_MODELS) {
-            try {
-              const stream = await groq.chat.completions.create({
-                model: id, max_tokens: maxTokens, temperature: 0.7,
-                messages: [{ role: "user", content: prompt }],
-                stream: true,
-              });
-              let text = "";
-              for await (const chunk of stream) {
-                text += chunk.choices[0]?.delta?.content ?? "";
-              }
-              if (text) { fullText = text; break; }
-            } catch (err) {
-              lastGroqErr = err;
-              if (isRateLimit(err)) lastRateLimitErr = err;
-              if (!isSkippable(err)) throw err;
-              console.warn(`[generate] groq/${id} failed:`, err instanceof Error ? err.message : err);
+            const stream = await groq.chat.completions.create({
+              model: id, max_tokens: maxTokens, temperature: 0.7,
+              messages: [{ role: "user", content: prompt }],
+              stream: true,
+            });
+            let text = "";
+            for await (const chunk of stream) {
+              text += chunk.choices[0]?.delta?.content ?? "";
             }
+            if (text) { fullText = text; break; }
+          } catch (err) {
+            lastErr = err;
+            if (isRateLimit(err)) lastRateLimitErr = err;
+            if (!isSkippable(err)) throw err;
+            console.warn(`[generate] groq/${id} failed:`, err instanceof Error ? err.message : err);
           }
         }
 
         if (!fullText) {
-          // Gemini failed with non-rate-limit error (e.g. invalid API key) — surface it
-          if (geminiErr && !isRateLimit({ message: geminiErr })) {
-            const clean = geminiErr.replace(/\[.*?\]/g, "").trim();
-            throw new Error(`Gemini error: ${clean || geminiErr}`);
-          }
-          // Both rate limited
           if (lastRateLimitErr) {
             const wait = extractWaitTime(lastRateLimitErr);
             throw new Error(wait ? `AI is busy. Try again in ${wait}.` : "AI is busy. Try again in a minute.");
           }
-          const detail = lastGroqErr instanceof Error ? lastGroqErr.message : String(lastGroqErr ?? "unknown");
+          const detail = lastErr instanceof Error ? lastErr.message : String(lastErr ?? "unknown");
           throw new Error(`Generation failed: ${detail}`);
         }
 
