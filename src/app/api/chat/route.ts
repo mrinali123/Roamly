@@ -4,23 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 
-// In-memory rate limit: 20 general messages per user per day
-const dailyLimits = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const midnight = new Date();
-  midnight.setHours(24, 0, 0, 0);
-
-  const entry = dailyLimits.get(userId);
-  if (!entry || now > entry.resetAt) {
-    dailyLimits.set(userId, { count: 1, resetAt: midnight.getTime() });
-    return true;
-  }
-  if (entry.count >= 20) return false;
-  entry.count++;
-  return true;
-}
+const MAX_DAILY = 20;
 
 const SYSTEM_PROMPT = `You are Roamly AI, a friendly expert travel assistant. Help users plan trips, discover destinations, pack smarter, and travel better.
 
@@ -43,7 +27,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!checkRateLimit(user.id)) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const { count } = await supabase
+    .from("trip_chats")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("role", "user")
+    .is("trip_id", null)
+    .gte("created_at", today.toISOString());
+  if (typeof count === "number" && count >= MAX_DAILY) {
     return NextResponse.json(
       { error: "You've reached today's limit of 20 messages. Resets at midnight." },
       { status: 429 }
@@ -70,8 +63,16 @@ export async function POST(request: NextRequest) {
       { role: "user", content: message },
     ];
 
+    // Log user message so rate limit persists across cold starts
+    await supabase.from("trip_chats").insert({
+      user_id: user.id,
+      trip_id: null,
+      role: "user",
+      content: message,
+    });
+
     const stream = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant",
       messages,
       stream: true,
       max_tokens: 512,
