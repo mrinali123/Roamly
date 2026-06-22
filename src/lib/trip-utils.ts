@@ -5,7 +5,23 @@ export function countNights(arrivalDate: string, departureDate: string): number 
 }
 
 export function stripGroqJson(rawText: string): string | null {
-  const stripped = rawText.replace(/```(?:json)?\n?/g, "").replace(/```/g, "");
-  const match = stripped.match(/\{[\s\S]*\}/);
-  return match ? match[0] : null;
+  const stripped = rawText
+    .replace(/```(?:json)?\n?/g, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const start = stripped.indexOf("{");
+  if (start === -1) return null;
+
+  // Try the full text first
+  const candidate = stripped.slice(start);
+  try {
+    JSON.parse(candidate);
+    return candidate;
+  } catch {
+    // fall through to repairJson caller
+  }
+
+  // Return raw slice starting at { so repairJson can attempt a fix
+  return candidate;
 }
