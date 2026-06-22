@@ -7,9 +7,8 @@ import { stripGroqJson } from "@/lib/trip-utils";
 import type { TripFormData, GeneratedItinerary } from "@/types/trip";
 
 const MODELS = [
-  { id: "llama-3.1-8b-instant",    maxTokens: 6000 },
-  { id: "gemma2-9b-it",            maxTokens: 6000 },
-  { id: "llama-3.3-70b-versatile", maxTokens: 6000 },
+  { id: "llama-3.1-8b-instant", maxTokens: 6000 },
+  { id: "gemma2-9b-it",         maxTokens: 6000 },
 ];
 
 function isRateLimit(err: unknown): boolean {
