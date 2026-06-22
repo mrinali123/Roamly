@@ -5,7 +5,6 @@ import type {
   ItineraryDay,
   TripFormData,
   GeneratedItinerary,
-  DbChatMessage,
 } from "@/types/trip";
 
 export async function createTripWithItinerary(
@@ -62,7 +61,7 @@ export async function createTripWithItinerary(
 
 export async function getTripWithDays(
   tripId: string,
-  userId: string
+  _userId: string
 ): Promise<TripWithDays | null> {
   const supabase = await createClient();
 
@@ -123,61 +122,6 @@ export async function getTripByShareToken(
 
   return { ...trip, itinerary_days: days ?? [] };
 }
-
-// ── Chat ─────────────────────────────────────────────────────────────────────
-
-export async function getChatHistory(
-  tripId: string,
-  userId: string
-): Promise<DbChatMessage[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("trip_chats")
-    .select("id, role, content, created_at")
-    .eq("trip_id", tripId)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(20)
-    .returns<DbChatMessage[]>();
-  return data ?? [];
-}
-
-export async function saveChatMessage(
-  tripId: string,
-  userId: string,
-  role: "user" | "assistant",
-  content: string
-): Promise<void> {
-  const supabase = await createClient();
-  await supabase.from("trip_chats").insert({ trip_id: tripId, user_id: userId, role, content });
-}
-
-export async function clearChatHistory(
-  tripId: string,
-  userId: string
-): Promise<void> {
-  const supabase = await createClient();
-  await supabase.from("trip_chats").delete().eq("trip_id", tripId).eq("user_id", userId);
-}
-
-export async function getDailyMessageCount(
-  tripId: string,
-  userId: string
-): Promise<number> {
-  const supabase = await createClient();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const { count } = await supabase
-    .from("trip_chats")
-    .select("*", { count: "exact", head: true })
-    .eq("trip_id", tripId)
-    .eq("user_id", userId)
-    .eq("role", "user")
-    .gte("created_at", today.toISOString());
-  return count ?? 0;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export async function updateShareSettings(
   tripId: string,
