@@ -1,0 +1,30 @@
+{
+  "name": "Roamly",
+  "short_name": "Roamly",
+  "description": "AI-powered travel planning",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#0F172A",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["travel", "productivity"],
+  "shortcuts": [
+    {
+      "name": "New trip",
+      "url": "/trips/new",
+      "description": "Plan a new trip"
+    },
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View all trips"
+    }
+  ]
+}
