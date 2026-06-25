@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import DashboardTripCard from "@/components/dashboard/TripCard";
 import type { Trip } from "@/types/trip";
 
@@ -23,9 +24,35 @@ interface Props {
   past:     Trip[];
 }
 
-export default function DashboardTabs({ upcoming, past }: Props) {
+export default function DashboardTabs({ upcoming: initialUpcoming, past: initialPast }: Props) {
+  const [upcomingTrips, setUpcomingTrips] = useState<Trip[]>(initialUpcoming);
+  const [pastTrips,     setPastTrips]     = useState<Trip[]>(initialPast);
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
-  const displayed = tab === "upcoming" ? upcoming : past;
+
+  const displayed = tab === "upcoming" ? upcomingTrips : pastTrips;
+
+  async function handleDelete(id: string) {
+    const prevUpcoming = upcomingTrips;
+    const prevPast     = pastTrips;
+
+    // Optimistic update — remove immediately
+    setUpcomingTrips((prev) => prev.filter((t) => t.id !== id));
+    setPastTrips((prev) => prev.filter((t) => t.id !== id));
+
+    try {
+      const res = await fetch(`/api/trips/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error ?? "Delete failed");
+      }
+      toast.success("Trip deleted");
+    } catch (err) {
+      // Rollback on failure
+      setUpcomingTrips(prevUpcoming);
+      setPastTrips(prevPast);
+      toast.error(err instanceof Error ? err.message : "Could not delete trip. Please try again.");
+    }
+  }
 
   return (
     <>
@@ -104,6 +131,7 @@ export default function DashboardTabs({ upcoming, past }: Props) {
               isPast={tab === "past"}
               showTemplate={tab === "past"}
               index={i}
+              onDelete={handleDelete}
             />
           ))}
         </div>

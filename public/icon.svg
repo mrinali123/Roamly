@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0F172A"/>
-  <circle cx="256" cy="256" r="140" fill="none" stroke="#38BDF8" stroke-width="28"/>
-  <circle cx="256" cy="256" r="28" fill="#38BDF8"/>
-  <line x1="256" y1="116" x2="256" y2="396" stroke="#38BDF8" stroke-width="20" stroke-linecap="round"/>
-  <line x1="116" y1="256" x2="396" y2="256" stroke="#38BDF8" stroke-width="20" stroke-linecap="round"/>
-  <polygon points="256,116 244,152 268,152" fill="#38BDF8"/>
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#060914"/>
+  <!-- Subtle outer ring -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#38BDF8" stroke-width="1.5" opacity="0.08"/>
+  <!-- Location pin body -->
+  <path d="M256 96C197 96 149 144 149 203C149 275 256 416 256 416C256 416 363 275 363 203C363 144 315 96 256 96Z" fill="#38BDF8"/>
+  <!-- Inner circle cutout -->
+  <circle cx="256" cy="200" r="46" fill="#060914"/>
+  <!-- Route arc below pin -->
+  <path d="M162 358 Q209 388 256 394 Q303 388 350 358" stroke="#38BDF8" stroke-width="13" fill="none" stroke-linecap="round" opacity="0.3"/>
+  <!-- Route endpoint dots -->
+  <circle cx="162" cy="358" r="13" fill="#38BDF8" opacity="0.3"/>
+  <circle cx="350" cy="358" r="13" fill="#38BDF8" opacity="0.3"/>
 </svg>

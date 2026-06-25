@@ -8,14 +8,11 @@ interface NavbarProps {
   user?: { email?: string; full_name?: string } | null;
 }
 
-const CompassLogo = () => (
+const RoamlyLogo = () => (
   <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-    <circle cx="14" cy="14" r="13" stroke="#38BDF8" strokeWidth="1"/>
-    <path d="M14 4L16.5 12H14H11.5L14 4Z" fill="#38BDF8"/>
-    <path d="M14 24L11.5 16H14H16.5L14 24Z" fill="rgba(255,255,255,0.3)"/>
-    <path d="M4 14L12 11.5V14V16.5L4 14Z" fill="rgba(255,255,255,0.3)"/>
-    <path d="M24 14L16 16.5V14V11.5L24 14Z" fill="#38BDF8" opacity="0.6"/>
-    <circle cx="14" cy="14" r="2" fill="#38BDF8"/>
+    <rect width="28" height="28" rx="7" fill="#060914"/>
+    <path d="M14 4C10.1 4 7 7.3 7 11.3C7 16.1 14 24 14 24C14 24 21 16.1 21 11.3C21 7.3 17.9 4 14 4Z" fill="#38BDF8"/>
+    <circle cx="14" cy="11" r="3.2" fill="#060914"/>
   </svg>
 );
 
@@ -48,17 +45,14 @@ export default function Navbar({ user }: NavbarProps) {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <CompassLogo />
+          <RoamlyLogo />
           <span
             style={{
               fontFamily: "var(--font-playfair, Georgia, serif)",
               fontSize: 20,
               fontWeight: 700,
               letterSpacing: "-0.02em",
-              background: "linear-gradient(90deg, #FFFFFF 0%, rgba(255,255,255,0.7) 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              color: "white",
             }}
           >
             Roamly

@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock, CheckCircle, Calendar, Users, Building2, ArrowRight, Copy } from "lucide-react";
+import { Clock, CheckCircle, Calendar, Users, Building2, ArrowRight, Copy, Trash2 } from "lucide-react";
 import type { Trip } from "@/types/trip";
 
 const CITY_IMAGES: { city: string; url: string }[] = [
@@ -72,15 +73,25 @@ const BUDGET_LABEL: Record<string, string> = {
 };
 
 interface DashboardTripCardProps {
-  trip:         Trip;
-  isPast?:      boolean;
+  trip:          Trip;
+  isPast?:       boolean;
   showTemplate?: boolean;
-  index?:       number;
+  index?:        number;
+  onDelete?:     (id: string) => void;
 }
 
-export default function DashboardTripCard({ trip, isPast = false, showTemplate = false, index = 0 }: DashboardTripCardProps) {
+export default function DashboardTripCard({
+  trip,
+  isPast = false,
+  showTemplate = false,
+  index = 0,
+  onDelete,
+}: DashboardTripCardProps) {
   const imgUrl = getImage(trip.destination);
   const days   = daysBetween(trip.arrival_date, trip.departure_date);
+
+  const [pendingDelete, setPendingDelete] = useState(false);
+  const [deleteHover,   setDeleteHover]   = useState(false);
 
   function handleTemplate() {
     try {
@@ -103,11 +114,92 @@ export default function DashboardTripCard({ trip, isPast = false, showTemplate =
     } catch {}
   }
 
+  function confirmDelete() {
+    setPendingDelete(false);
+    onDelete?.(trip.id);
+  }
+
   return (
     <div
       className="animate-fade-up flex flex-col"
-      style={{ animationDelay: `${300 + index * 100}ms` }}
+      style={{ animationDelay: `${300 + index * 100}ms`, position: "relative" }}
     >
+      {/* ── Delete confirmation overlay ── */}
+      {pendingDelete && (
+        <div
+          style={{
+            position: "absolute", inset: 0, zIndex: 20,
+            borderRadius: 20,
+            background: "rgba(6,8,15,0.93)",
+            border: "1px solid rgba(248,113,113,0.2)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: 12, padding: "0 24px",
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Trash2 size={20} color="#F87171" />
+          </div>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "white", textAlign: "center", lineHeight: 1.3 }}>
+            Delete this trip?
+          </p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5, maxWidth: 200 }}>
+            <strong style={{ color: "rgba(255,255,255,0.65)" }}>{trip.destination.split(",")[0]}</strong>
+            {" "}will be permanently removed. This cannot be undone.
+          </p>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            <button
+              onClick={() => setPendingDelete(false)}
+              style={{
+                padding: "9px 20px", borderRadius: 10,
+                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.10)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)"; }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              style={{
+                padding: "9px 20px", borderRadius: 10,
+                background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.35)",
+                color: "#FCA5A5", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", transition: "background 0.15s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(248,113,113,0.25)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(248,113,113,0.15)"; }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete icon button (top-left, always visible when onDelete provided) ── */}
+      {onDelete && !pendingDelete && (
+        <button
+          onClick={() => setPendingDelete(true)}
+          aria-label="Delete trip"
+          onMouseEnter={() => setDeleteHover(true)}
+          onMouseLeave={() => setDeleteHover(false)}
+          style={{
+            position: "absolute", top: 10, left: 10, zIndex: 10,
+            width: 30, height: 30, borderRadius: 8,
+            background: deleteHover ? "rgba(248,113,113,0.2)" : "rgba(6,8,15,0.65)",
+            border: deleteHover ? "1px solid rgba(248,113,113,0.4)" : "1px solid rgba(255,255,255,0.1)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", transition: "all 0.15s ease",
+            opacity: deleteHover ? 1 : 0.55,
+          }}
+        >
+          <Trash2 size={13} color={deleteHover ? "#FCA5A5" : "rgba(255,255,255,0.75)"} />
+        </button>
+      )}
+
+      {/* ── Card ── */}
       <Link
         href={`/trips/${trip.id}`}
         className="group relative block overflow-hidden"

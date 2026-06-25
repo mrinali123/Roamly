@@ -93,15 +93,12 @@ const STATS = [
   { num: "Offline", label: "Works without internet" },
 ];
 
-function CompassLogo() {
+function RoamlyLogo() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <circle cx="14" cy="14" r="13" stroke="#38BDF8" strokeWidth="1"/>
-      <path d="M14 4L16.5 12H14H11.5L14 4Z" fill="#38BDF8"/>
-      <path d="M14 24L11.5 16H14H16.5L14 24Z" fill="rgba(255,255,255,0.25)"/>
-      <path d="M4 14L12 11.5V14V16.5L4 14Z" fill="rgba(255,255,255,0.25)"/>
-      <path d="M24 14L16 16.5V14V11.5L24 14Z" fill="#38BDF8" opacity="0.6"/>
-      <circle cx="14" cy="14" r="2" fill="#38BDF8"/>
+      <rect width="28" height="28" rx="7" fill="#060914"/>
+      <path d="M14 4C10.1 4 7 7.3 7 11.3C7 16.1 14 24 14 24C14 24 21 16.1 21 11.3C21 7.3 17.9 4 14 4Z" fill="#38BDF8"/>
+      <circle cx="14" cy="11" r="3.2" fill="#060914"/>
     </svg>
   );
 }
@@ -143,12 +140,8 @@ export default async function LandingPage() {
             style={{ maskImage: "radial-gradient(ellipse 70% 90% at 30% 50%, black, transparent)" }} />
         </svg>
 
-        {/* Deep blue ambient light pool — left */}
-        <div aria-hidden="true" className="animate-orb-float" style={{ position: "absolute", top: "-10%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 65%)", pointerEvents: "none" }} />
-        {/* Indigo pool — upper right */}
-        <div aria-hidden="true" className="animate-orb-float2" style={{ position: "absolute", top: "-20%", right: "-10%", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 65%)", pointerEvents: "none" }} />
-        {/* Gold warmth — bottom */}
-        <div aria-hidden="true" className="animate-orb-float" style={{ position: "absolute", bottom: "-5%", left: "35%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(240,180,41,0.035) 0%, transparent 65%)", animationDelay: "6s", pointerEvents: "none" }} />
+        {/* Subtle blue ambient — static */}
+        <div aria-hidden="true" style={{ position: "absolute", top: "-10%", left: "-15%", width: 800, height: 800, borderRadius: "50%", background: "radial-gradient(circle, rgba(56,189,248,0.05) 0%, transparent 60%)", pointerEvents: "none" }} />
 
         {/* Right-side cinematic image — masked */}
         <div style={{
@@ -188,12 +181,11 @@ export default async function LandingPage() {
               fontWeight: 900,
               letterSpacing: "-0.04em",
               lineHeight: 1.0,
-              background: "linear-gradient(115deg, #38BDF8 0%, #818CF8 55%, #F0B429 100%)",
+              background: "linear-gradient(115deg, #38BDF8 0%, #7DD3FC 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
-              backgroundSize: "200% 100%",
-            }} className="animate-gradient-text">
+            }}>
               perfectly planned.
             </span>
           </h1>
@@ -215,7 +207,7 @@ export default async function LandingPage() {
 
         {/* Floating itinerary preview card */}
         <div
-          className="hidden xl:block animate-card-float"
+          className="hidden xl:block"
           style={{
             position: "absolute", right: "4.5%", top: "22%", zIndex: 20,
             width: 292,
@@ -234,7 +226,7 @@ export default async function LandingPage() {
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>Your Itinerary</p>
               <p style={{ fontSize: 13, fontWeight: 700, color: "white" }}>Amalfi Coast · 5 Days</p>
             </div>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 10px #10B981" }} className="animate-glow-pulse" />
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
           </div>
 
           {/* Day tabs */}
@@ -351,7 +343,7 @@ export default async function LandingPage() {
               <SectionLabel>The Journey</SectionLabel>
               <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: "clamp(38px, 4vw, 64px)", fontWeight: 900, letterSpacing: "-0.035em", color: "white", lineHeight: 1.05, margin: "0 0 24px" }}>
                 Three steps
-                <span style={{ display: "block", background: "linear-gradient(135deg, #38BDF8 0%, #818CF8 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                <span style={{ display: "block", background: "linear-gradient(135deg, #38BDF8 0%, #7DD3FC 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                   to anywhere.
                 </span>
               </h2>
@@ -526,7 +518,7 @@ export default async function LandingPage() {
           <SectionLabel>Begin</SectionLabel>
           <h2 style={{ fontFamily: FONT_DISPLAY, fontSize: "clamp(44px, 7vw, 96px)", fontWeight: 900, letterSpacing: "-0.04em", color: "white", lineHeight: 1.0, margin: "0 0 32px" }}>
             Your journey<br/>
-            <span style={{ background: "linear-gradient(115deg, #38BDF8 0%, #818CF8 50%, #F0B429 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }} className="animate-gradient-text">
+            <span style={{ background: "linear-gradient(115deg, #38BDF8 0%, #7DD3FC 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               starts now.
             </span>
           </h2>
@@ -541,7 +533,7 @@ export default async function LandingPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ marginBottom: 56 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-              <CompassLogo />
+              <RoamlyLogo />
               <span style={{ fontFamily: FONT_DISPLAY, fontSize: 20, fontWeight: 700, color: "white", letterSpacing: "-0.02em" }}>Roamly</span>
             </div>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", lineHeight: 1.75, maxWidth: 300 }}>
