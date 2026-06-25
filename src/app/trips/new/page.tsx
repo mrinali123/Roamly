@@ -568,7 +568,8 @@ export default function NewTripPage() {
     if (restored.current) return;
     restored.current = true;
     try {
-      const isTemplate = new URLSearchParams(window.location.search).get("from") === "template";
+      const from = new URLSearchParams(window.location.search).get("from");
+      const isTemplate = from === "template" || from === "edit";
       if (isTemplate) {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {

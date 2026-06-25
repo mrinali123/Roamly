@@ -90,7 +90,7 @@ const STEPS = [
 const STATS = [
   { num: "190+",  label: "Countries" },
   { num: "2 min", label: "To plan any trip" },
-  { num: "Offline", label: "Works without internet" },
+  { num: "Offline", label: "Offline access to saved itineraries" },
 ];
 
 function RoamlyLogo() {

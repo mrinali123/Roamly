@@ -34,7 +34,7 @@ export default function EditSetup({ trip }: { trip: Trip }) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tripToFormData(trip)));
     } catch {}
-    router.replace("/trips/new");
+    router.replace("/trips/new?from=edit");
   }, [trip, router]);
 
   return (
