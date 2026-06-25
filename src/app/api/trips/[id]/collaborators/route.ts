@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import nodemailer from "nodemailer";
 import { withLogger, getLog } from "@/lib/with-logger";
+import { getBaseUrl } from "@/lib/url";
 
 function generateInviteToken(): string {
   const bytes = new Uint8Array(12);
@@ -70,8 +71,7 @@ export const POST = withLogger(
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://roamly-ten.vercel.app";
-    const inviteUrl = `${appUrl}/invite/${invite_token}`;
+    const inviteUrl = `${getBaseUrl()}/invite/${invite_token}`;
 
     let emailSent = false;
 
