@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { createClient } from "@/lib/supabase/server";
+import { withLogger, getLog } from "@/lib/with-logger";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
 
@@ -17,13 +18,15 @@ BEHAVIOUR:
 - Use travel emojis occasionally to keep it friendly ✈️ 🗺️ 🍽️
 - If someone is ready to plan a specific trip, encourage them to use Roamly's trip planner`;
 
-export async function POST(request: NextRequest) {
+export const POST = withLogger("chat", async (request: NextRequest) => {
+  const log = getLog();
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
+    log.warn({ event: "auth.unauthorized" }, "unauthorized chat request");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -36,7 +39,12 @@ export async function POST(request: NextRequest) {
     .eq("role", "user")
     .is("trip_id", null)
     .gte("created_at", today.toISOString());
+
   if (typeof count === "number" && count >= MAX_DAILY) {
+    log.warn(
+      { userId: user.id, dailyCount: count, limit: MAX_DAILY, event: "rate_limit" },
+      "daily chat limit reached"
+    );
     return NextResponse.json(
       { error: "You've reached today's limit of 20 messages. Resets at midnight." },
       { status: 429 }
@@ -71,6 +79,18 @@ export async function POST(request: NextRequest) {
       content: message,
     });
 
+    const aiStart = performance.now();
+    log.info(
+      {
+        userId: user.id,
+        model: "llama-3.1-8b-instant",
+        messageCount: messages.length,
+        maxTokens: 512,
+        event: "ai.request",
+      },
+      "groq request"
+    );
+
     const stream = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant",
       messages,
@@ -79,6 +99,11 @@ export async function POST(request: NextRequest) {
       temperature: 0.7,
     });
 
+    log.info(
+      { ttfb_ms: Math.round(performance.now() - aiStart), event: "ai.stream_start" },
+      "groq stream opened"
+    );
+
     const readable = new ReadableStream({
       async start(controller) {
         try {
@@ -86,7 +111,12 @@ export async function POST(request: NextRequest) {
             const text = chunk.choices[0]?.delta?.content ?? "";
             if (text) controller.enqueue(new TextEncoder().encode(text));
           }
+          log.info(
+            { total_ms: Math.round(performance.now() - aiStart), event: "ai.stream_end" },
+            "groq stream complete"
+          );
         } catch (e) {
+          log.error({ err: e, event: "ai.stream_error" }, "groq stream error");
           controller.error(e);
         } finally {
           controller.close();
@@ -102,10 +132,10 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[general-chat]", error);
+    log.error({ err: error, event: "request.error" }, "chat request failed");
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed" },
       { status: 500 }
     );
   }
-}
+});
