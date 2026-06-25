@@ -2,16 +2,64 @@
 
 A full-stack AI travel planning application that converts user trip preferences into structured, time-aware itineraries using a Groq LLM, then validates and repairs that output through a deterministic constraint engine before persisting it to a Supabase PostgreSQL backend.
 
-The core engineering problem is making LLM output production-safe: parsing and repairing streaming JSON, enforcing real-world scheduling constraints (arrival windows, meal slots, place-type rules), geocoding every stop with spatial accuracy guards, and routing between them via OSRM — all before any data reaches the database.
+> Unlike most AI travel tools that trust LLM output directly, Roamly enforces a deterministic constraint engine between generation and storage. Every itinerary is validated and auto-repaired for scheduling conflicts, missing meals, and spatial feasibility before any data reaches the database — making the output reliable enough to drive a real UI.
 
 **[Live Demo →](https://roamly-ten.vercel.app)**
+
+---
+
+## Demo Flow
+
+The live demo is open — sign up free to generate itineraries (uses Groq's free tier).
+
+1. **Create a trip** — pick any destination (e.g., Paris, Kyoto, New York), set arrival and departure dates, add a hotel name, and choose your pace and interests
+2. **Watch generation** — a live SSE stream shows progress as the LLM builds your itinerary (15–30 seconds)
+3. **Explore the day view** — click through days to see timed places, restaurant picks, and weather context
+4. **Switch to Map view** — every stop is connected by OSRM real-road routing, not straight lines
+5. **Try the AI chat** — ask "what if it rains on Day 2?" or "swap the museum for a local market"
+6. **Open the Budget tracker** — add sample expenses and watch the Recharts breakdown update
+7. **Share the trip** — generate a public link and open it in an incognito tab (no sign-in required)
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart TD
+    A[User Browser\nNext.js Client] -->|Trip form| B[Next.js App Router\nServer Components + API Routes]
+
+    B -->|POST /api/itinerary/generate| C[Groq LLM\nllama-3.1-8b-instant]
+    C -->|Streaming JSON via SSE| D[JSON Parser + Repair]
+    D --> E[Constraint Engine\nlib/constraint-engine.ts]
+
+    E -->|Violations auto-repaired| F[Geocoding\nPhoton + Nominatim]
+    F -->|GPS coords + distance guard| G[Travel Feasibility\nHaversine check]
+    G -->|Validated itinerary| H[(Supabase\nPostgreSQL + RLS)]
+
+    H -->|TripWithDays| B
+    B -->|Server props| I[Trip View UI]
+
+    I --> J[Day Timeline]
+    I --> K[Leaflet Map\n+ OSRM Road Routing]
+    I --> L[Weather Panel\nOpen-Meteo API]
+    I --> M[AI Chat\nGroq streaming]
+    I --> N[Budget Tracker\nRecharts]
+
+    B -->|/api/trips/id/weather| L
+    B -->|/api/trips/id/chat| M
+    B -->|/api/trips/id/expenses| N
+
+    style E fill:#0f2a47,stroke:#38BDF8,color:#fff
+    style H fill:#0f2a1f,stroke:#10B981,color:#fff
+    style C fill:#1f1040,stroke:#a78bfa,color:#fff
+```
 
 ---
 
 ## Features
 
 - **AI itinerary generation** — Groq-powered (`llama-3.1-8b-instant`), streams progress via SSE; respects arrival/departure times, hotel check-in/out, pace, budget, interests, dietary needs, and must-visit places
-- **Constraint engine** — deterministic post-AI validation layer: deduplicates places, enforces meal window completeness, repairs time window violations, flags structurally broken days for regeneration
+- **Constraint engine** — deterministic post-AI validation: deduplicates places, enforces meal window completeness, repairs time window violations, flags structurally broken days for automatic regeneration
 - **Day-by-day view** — per-day weather forecast, sightseeing places with GPS coordinates and timing rationale, restaurant picks, and quick tips
 - **Interactive map** — Leaflet map with numbered pins per place; real-road routing between stops via OSRM
 - **Budget tracker** — log expenses by category, visualise spending with Recharts
@@ -25,7 +73,7 @@ The core engineering problem is making LLM output production-safe: parsing and r
 ## Key Engineering Highlights
 
 **Constraint Engine** (`src/lib/constraint-engine.ts`)
-A rule-based validation layer that runs between LLM output and the database write. It applies four deterministic rules in sequence: deduplicate places within the same day, repair time window violations per place type (delegating to `itinerary-validator.ts`), inject missing meal types (breakfast/lunch/dinner) with fallback entries, and flag any day with zero remaining places as `needsReview`. When `needsReview` is true, the generation route triggers one automatic regeneration attempt before surfacing an error to the client. A fifth rule runs after geocoding: consecutive places are checked against a 40 km/h city travel speed to detect physically infeasible transitions and log them as structured warnings.
+A rule-based validation layer that runs between LLM output and the database write. It applies five deterministic rules in sequence: deduplicate places within the same day, repair time window violations per place type (delegating to `itinerary-validator.ts`), inject missing meal types (breakfast/lunch/dinner) with fallback entries, and flag any day with zero remaining places as `needsReview`. When `needsReview` is true, the generation route triggers one automatic regeneration attempt before surfacing an error to the client. A fifth rule runs after geocoding: consecutive places are checked against a 40 km/h city travel speed to detect physically infeasible transitions and log them as structured warnings.
 
 **SSE Streaming Pipeline** (`src/app/api/itinerary/generate/route.ts`)
 Itinerary generation uses a `ReadableStream` to push Server-Sent Events to the client throughout the 15–30 second Groq LLM call. The pipeline stages — token streaming, JSON extraction, constraint validation, geocoding, DB write — emit distinct progress events so the UI reflects actual server state rather than a fake timer. Retry logic handles JSON parse failures (up to 2 attempts) and a pre-flight token guard prevents 413 errors before the Groq call is even made.
@@ -84,40 +132,6 @@ Every API route is wrapped in a `withLogger` higher-order function that creates 
    → Open-Meteo weather overlay (1-hour Supabase cache)
    → AI chat panel (trip context injected as system prompt)
    → Budget tracker (expenses per category, Recharts visualisation)
-```
-
----
-
-## System Architecture
-
-```mermaid
-flowchart TD
-    A[User Browser\nNext.js Client] -->|Trip form| B[Next.js App Router\nServer Components + API Routes]
-
-    B -->|POST /api/itinerary/generate| C[Groq LLM\nllama-3.1-8b-instant]
-    C -->|Streaming JSON via SSE| D[JSON Parser + Repair]
-    D --> E[Constraint Engine\nlib/constraint-engine.ts]
-
-    E -->|Violations auto-repaired| F[Geocoding\nPhoton + Nominatim]
-    F -->|GPS coords + distance guard| G[Travel Feasibility\nHaversine check]
-    G -->|Validated itinerary| H[(Supabase\nPostgreSQL + RLS)]
-
-    H -->|TripWithDays| B
-    B -->|Server props| I[Trip View UI]
-
-    I --> J[Day Timeline]
-    I --> K[Leaflet Map\n+ OSRM Road Routing]
-    I --> L[Weather Panel\nOpen-Meteo API]
-    I --> M[AI Chat\nGroq streaming]
-    I --> N[Budget Tracker\nRecharts]
-
-    B -->|/api/trips/id/weather| L
-    B -->|/api/trips/id/chat| M
-    B -->|/api/trips/id/expenses| N
-
-    style E fill:#0f2a47,stroke:#38BDF8,color:#fff
-    style H fill:#0f2a1f,stroke:#10B981,color:#fff
-    style C fill:#1f1040,stroke:#a78bfa,color:#fff
 ```
 
 ---
@@ -233,6 +247,16 @@ src/
 │   └── supabase/                 # Client, server, and Edge middleware helpers
 └── types/                        # TypeScript interfaces (trip, budget, weather)
 ```
+
+---
+
+## Known Limitations
+
+- **Offline mode is read-only** — only previously viewed trips are cached locally. New trip generation, AI chat, map routing, and PDF export require an active internet connection.
+- **Route ordering is heuristic** — stops are sequenced by the LLM's scheduling intent, not a Travelling Salesman Problem solver. OSRM provides accurate road routing between stops in that AI-determined order.
+- **Geocoding coverage varies** — Photon and Nominatim are free OSM-based services. Niche destinations or recently added places may fail to geocode and will appear without map pins.
+- **AI may need regeneration** — for long trips (7+ days, packed pace), the Groq free-tier token limit can trigger a retry that adds ~15 seconds to generation time.
+- **Map tile dependency** — map labels are served by Esri World Street Map tiles; tile availability and update cadence depend on the Esri tile service, which is outside the app's control.
 
 ---
 

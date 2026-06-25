@@ -460,7 +460,7 @@ export default async function LandingPage() {
                       </svg>
                     </div>
                     <h3 style={{ fontSize: 22, fontWeight: 700, color: "white", letterSpacing: "-0.02em", lineHeight: 1.2, margin: "0 0 8px" }}>
-                      Weather-smart scheduling.
+                      Weather forecasts, built in.
                     </h3>
                     <p style={{ fontSize: 14, color: "rgba(255,255,255,0.42)", lineHeight: 1.6, margin: 0 }}>
                       Per-day weather forecasts surfaced alongside your itinerary so you can plan around conditions in advance.
