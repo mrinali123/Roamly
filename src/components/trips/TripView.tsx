@@ -248,7 +248,7 @@ export default function TripView({ trip, readOnly = false, userEmail, isOwner = 
       {/* ── Fixed ambient background ── */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
         <div style={{ position: "absolute", top: "-5%", right: "-3%", width: 800, height: 800, borderRadius: "50%", background: "rgba(56,189,248,0.04)", filter: "blur(150px)" }} />
-        <div style={{ position: "absolute", top: "40%", left: "-5%", width: 600, height: 600, borderRadius: "50%", background: "rgba(139,92,246,0.03)", filter: "blur(120px)" }} />
+        <div style={{ position: "absolute", top: "40%", left: "-5%", width: 600, height: 600, borderRadius: "50%", background: "rgba(56,189,248,0.02)", filter: "blur(120px)" }} />
         <div style={{ position: "absolute", bottom: "5%", left: "30%", width: 400, height: 400, borderRadius: "50%", background: "rgba(245,158,11,0.025)", filter: "blur(100px)" }} />
         <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       </div>
@@ -314,7 +314,7 @@ export default function TripView({ trip, readOnly = false, userEmail, isOwner = 
             transform: "perspective(1000px) rotateY(-8deg) rotateX(4deg)",
           }}>
             <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.45)", marginBottom: 6 }}>Total Places</p>
-            <p style={{ fontSize: 34, fontWeight: 800, background: "linear-gradient(135deg, #38BDF8, #A855F7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1 }}>{totalPlaces}</p>
+            <p style={{ fontSize: 34, fontWeight: 800, color: "#38BDF8", lineHeight: 1 }}>{totalPlaces}</p>
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 5 }}>across {days.length} day{days.length !== 1 ? "s" : ""}</p>
           </div>
           {/* Card 2 — behind */}
@@ -484,7 +484,7 @@ export default function TripView({ trip, readOnly = false, userEmail, isOwner = 
                   )}
                   {/* Active indicator */}
                   {isActive && (
-                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(to right, #38BDF8, #A855F7)" }} />
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#38BDF8" }} />
                   )}
                 </button>
               );

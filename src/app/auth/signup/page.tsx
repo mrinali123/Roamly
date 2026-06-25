@@ -228,7 +228,7 @@ export default function SignUpPage() {
           <p style={{ fontSize: 44, fontWeight: 900, color: "white", lineHeight: 1.05, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)" }}>
             The journey
           </p>
-          <p style={{ fontSize: 44, fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)", background: "linear-gradient(135deg, #38BDF8, #818CF8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+          <p style={{ fontSize: 44, fontWeight: 900, lineHeight: 1.05, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)", color: "#38BDF8" }}>
             of a thousand miles
           </p>
           <p style={{ fontSize: 44, fontWeight: 900, color: "white", lineHeight: 1.05, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)" }}>

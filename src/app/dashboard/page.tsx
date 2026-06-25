@@ -57,7 +57,7 @@ export default async function DashboardPage() {
     { value: trips.length,    label: "Trips Planned", subtitle: "adventures planned and crafted",    accent: "#38BDF8", accentSecondary: "#0EA5E9", type: "trips"     as const },
     { value: uniqueCountries, label: "Countries",     subtitle: "unique destinations explored", accent: "#10B981", accentSecondary: "#34D399", type: "countries" as const },
     { value: totalDays,       label: "Days Traveled", subtitle: "days of exploration & wonder", accent: "#F59E0B", accentSecondary: "#FBBF24", type: "days"      as const },
-    { value: favourite,       label: "Favourite",     subtitle: "your most-visited destination",accent: "#A855F7", accentSecondary: "#C084FC", type: "favourite" as const },
+    { value: favourite,       label: "Favourite",     subtitle: "your most-visited destination",accent: "#F0B429", accentSecondary: "#FBBF24", type: "favourite" as const },
   ];
 
 
@@ -70,13 +70,6 @@ export default async function DashboardPage() {
         position: "relative",
       }}
     >
-      {/* Ambient orbs */}
-      <div aria-hidden="true" className="pointer-events-none" style={{ position: "fixed", inset: 0, zIndex: 0, overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "10%", right: "-5%", width: 600, height: 600, borderRadius: "50%", background: "rgba(56,189,248,0.06)", filter: "blur(80px)" }} />
-        <div style={{ position: "absolute", bottom: "15%", left: "-8%", width: 400, height: 400, borderRadius: "50%", background: "rgba(245,158,11,0.04)", filter: "blur(60px)" }} />
-        <div style={{ position: "absolute", top: "50%", left: "40%", width: 300, height: 300, borderRadius: "50%", background: "rgba(139,92,246,0.05)", filter: "blur(60px)", transform: "translateY(-50%)" }} />
-      </div>
-
       <div style={{ position: "relative", zIndex: 1 }}>
       <Navbar user={{ email: user.email, full_name: displayName }} />
 
@@ -145,12 +138,10 @@ export default async function DashboardPage() {
           className="mt-6 animate-fade-up hidden sm:flex items-center justify-between rounded-2xl px-8 py-6 relative overflow-hidden"
           style={{
             animationDelay: "350ms",
-            background: "linear-gradient(135deg, rgba(56,189,248,0.10) 0%, rgba(168,85,247,0.06) 50%, rgba(245,158,11,0.08) 100%)",
-            border: "1px solid rgba(56,189,248,0.18)",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(56,189,248,0.15)",
           }}
         >
-          {/* Decorative orb */}
-          <div aria-hidden="true" style={{ position: "absolute", right: 160, top: "50%", transform: "translateY(-50%)", width: 120, height: 120, borderRadius: "50%", background: "rgba(56,189,248,0.06)", filter: "blur(30px)", pointerEvents: "none" }} />
           <div>
             <p style={{ fontWeight: 700, fontSize: 16, color: "white", marginBottom: 4 }}>
               Ready for your next adventure?
@@ -158,10 +149,10 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/trips/new"
-            className="gradient-btn shrink-0"
+            className="white-btn shrink-0"
             style={{ padding: "11px 24px", fontSize: 14, whiteSpace: "nowrap" }}
           >
-            ＋ Plan a Trip
+            Plan a Trip
           </Link>
         </div>
       </main>
@@ -172,7 +163,7 @@ export default async function DashboardPage() {
         aria-label="Plan a new trip"
         className="fixed bottom-20 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-sky text-white animate-fab-pulse sm:hidden"
       >
-        <span className="text-2xl font-light leading-none">＋</span>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><line x1="10" y1="3" x2="10" y2="17" stroke="white" strokeWidth="2" strokeLinecap="round"/><line x1="3" y1="10" x2="17" y2="10" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
       </Link>
 
       <DashboardChatButton />

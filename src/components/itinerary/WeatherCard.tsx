@@ -32,7 +32,7 @@ export default function WeatherCard({ aiWeather, apiWeather }: WeatherCardProps)
     return (
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, overflow: "hidden" }}>
         {/* Header */}
-        <div style={{ background: "linear-gradient(135deg, rgba(56,189,248,0.10), rgba(139,92,246,0.07))", padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ background: "rgba(56,189,248,0.06)", padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Sun size={18} color="#38BDF8" />
             <span style={{ fontSize: 14, fontWeight: 600, color: "white" }}>Today&apos;s Weather</span>
@@ -103,7 +103,7 @@ export default function WeatherCard({ aiWeather, apiWeather }: WeatherCardProps)
   // Fallback: API weather (simpler display)
   return (
     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, overflow: "hidden" }}>
-      <div style={{ background: "linear-gradient(135deg, rgba(56,189,248,0.10), rgba(139,92,246,0.07))", padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <div style={{ background: "rgba(56,189,248,0.06)", padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Sun size={18} color="#38BDF8" />
           <span style={{ fontSize: 14, fontWeight: 600, color: "white" }}>Today&apos;s Weather</span>

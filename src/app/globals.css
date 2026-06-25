@@ -239,46 +239,11 @@ body {
   transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease, opacity 0.3s;
 }
 
-/* ── Landing page new keyframes ─────────────────────────────────────────── */
-@keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%       { transform: translate(30px, -40px) scale(1.05); }
-  66%       { transform: translate(-20px, 20px) scale(0.97); }
-}
-@keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-@keyframes glowPulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 8px #38BDF8; }
-  50%       { opacity: 0.6; box-shadow: 0 0 16px #38BDF8; }
-}
+/* ── Scroll indicator dot ───────────────────────────────────────────────── */
 @keyframes scrollDot {
   0%   { transform: translateY(0); opacity: 1; }
   100% { transform: translateY(10px); opacity: 0; }
 }
-@keyframes cardFloat {
-  0%, 100% { transform: perspective(1200px) rotateY(-12deg) rotateX(4deg) translateY(0); }
-  50%       { transform: perspective(1200px) rotateY(-12deg) rotateX(4deg) translateY(-12px); }
-}
-@keyframes cardFloat2 {
-  0%, 100% { transform: perspective(1200px) rotateY(-8deg) rotateX(6deg) translateY(0); }
-  50%       { transform: perspective(1200px) rotateY(-8deg) rotateX(6deg) translateY(-10px); }
-}
-@keyframes cardFloat3 {
-  0%, 100% { transform: perspective(1200px) rotateY(-10deg) rotateX(2deg) translateY(0); }
-  50%       { transform: perspective(1200px) rotateY(-10deg) rotateX(2deg) translateY(-14px); }
-}
-.animate-orb-float { animation: orbFloat 12s ease-in-out infinite; }
-.animate-gradient-text {
-  background-size: 200% 200%;
-  animation: gradientShift 4s ease infinite;
-}
-.animate-glow-pulse { animation: glowPulse 2s ease infinite; }
-.animate-card-float { animation: cardFloat 6s ease-in-out infinite; }
-.animate-card-float2 { animation: cardFloat2 5s ease-in-out infinite 1s; }
-.animate-card-float3 { animation: cardFloat3 7s ease-in-out infinite 2s; }
 
 /* ── Nav underline hover ─────────────────────────────────────────────────── */
 .nav-link {
@@ -317,42 +282,49 @@ body {
 }
 .animate-fade-up { animation: fade-up 0.6s ease-out both; }
 
-/* Floating action button pulse */
-@keyframes fab-pulse {
-  0%, 100% { transform: scale(1);    box-shadow: 0 4px 20px rgba(56,189,248,0.4); }
-  50%       { transform: scale(1.06); box-shadow: 0 4px 28px rgba(56,189,248,0.65); }
+/* Floating action button */
+.animate-fab-pulse {
+  box-shadow: 0 4px 20px rgba(56,189,248,0.3);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
-.animate-fab-pulse { animation: fab-pulse 3s ease-in-out infinite; }
+.animate-fab-pulse:hover {
+  box-shadow: 0 6px 28px rgba(56,189,248,0.45);
+  transform: scale(1.05);
+}
 
 /* ── Landing page CSS hover effects (server component safe) ─────────────── */
 .step-card {
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: 24px;
+  padding: 36px;
   position: relative;
   overflow: hidden;
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  cursor: default;
 }
 .step-card:hover {
   background: rgba(255,255,255,0.04);
-  border-color: rgba(56,189,248,0.2);
-  box-shadow: 0 0 60px rgba(56,189,248,0.06);
+  border-color: rgba(56,189,248,0.18);
+  transform: translateY(-2px);
 }
+
+/* ── Testimonial → showcase card ───────────────────────────────────────── */
 .testimonial-card {
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 20px;
-  padding: 32px;
+  border-radius: 24px;
+  padding: 36px;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.3s ease;
   height: 100%;
 }
 .testimonial-card:hover {
-  border-color: rgba(56,189,248,0.2);
-  box-shadow: 0 0 40px rgba(56,189,248,0.04);
+  border-color: rgba(56,189,248,0.18);
+  transform: translateY(-2px);
 }
+
 .footer-link {
   display: block;
   font-size: 14px;
@@ -375,61 +347,13 @@ body {
   background-size: 256px 256px;
 }
 
-/* ── 3D destination card hover ───────────────────────────────────────────── */
+/* ── Destination card hover ──────────────────────────────────────────────── */
 .dest-card-3d {
-  transform-style: preserve-3d;
-  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.5s ease;
-  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 .dest-card-3d:hover {
-  transform: perspective(1000px) rotateX(-3deg) rotateY(4deg) scale(1.02);
-  box-shadow: -8px 16px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.25) inset;
-}
-
-/* ── Premium step card (overrides inline styles for hover) ───────────────── */
-.step-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 24px;
-  padding: 36px;
-  position: relative;
-  overflow: hidden;
-  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
-  cursor: default;
-}
-.step-card:hover {
-  background: rgba(255,255,255,0.035);
-  border-color: rgba(56,189,248,0.18);
-  box-shadow: 0 0 80px rgba(56,189,248,0.05), 0 32px 64px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-/* Diagonal shine on step-card hover */
-.step-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-.step-card:hover::after { opacity: 1; }
-
-/* ── Testimonial → now "showcase" card ───────────────────────────────────── */
-.testimonial-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 24px;
-  padding: 36px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.35s ease, box-shadow 0.35s ease, transform 0.35s ease;
-  height: 100%;
-}
-.testimonial-card:hover {
-  border-color: rgba(56,189,248,0.18);
-  box-shadow: 0 0 60px rgba(56,189,248,0.04), 0 24px 48px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(56,189,248,0.2) inset;
 }
 
 /* ── Number stat strip ───────────────────────────────────────────────────── */
@@ -455,24 +379,16 @@ body {
   overflow: hidden;
   border-radius: 28px;
   border: 1px solid rgba(255,255,255,0.07);
-  transition: transform 0.5s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s ease;
+  transition: transform 0.4s cubic-bezier(0.23,1,0.32,1), box-shadow 0.4s ease;
 }
 .showcase-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 48px 100px rgba(0,0,0,0.7), 0 0 0 1px rgba(56,189,248,0.2) inset;
+  transform: translateY(-4px);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(56,189,248,0.15) inset;
 }
 .showcase-card .sc-img {
-  transition: transform 0.8s cubic-bezier(0.23,1,0.32,1);
+  transition: transform 0.7s cubic-bezier(0.23,1,0.32,1);
 }
-.showcase-card:hover .sc-img { transform: scale(1.06); }
-
-/* ── New orbFloat2 with different timing ─────────────────────────────────── */
-@keyframes orbFloat2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  40%       { transform: translate(-40px, 30px) scale(1.08); }
-  70%       { transform: translate(25px, -20px) scale(0.95); }
-}
-.animate-orb-float2 { animation: orbFloat2 16s ease-in-out infinite; }
+.showcase-card:hover .sc-img { transform: scale(1.05); }
 
 /* ── Line draw animation ─────────────────────────────────────────────────── */
 @keyframes lineDraw {
@@ -504,10 +420,3 @@ body {
 .animate-reveal-up {
   animation: revealUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-
-/* ── Gold glow pulse ─────────────────────────────────────────────────────── */
-@keyframes goldPulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 8px #F0B429; }
-  50%       { opacity: 0.7; box-shadow: 0 0 20px #F0B429; }
-}
-.animate-gold-pulse { animation: goldPulse 2.5s ease infinite; }

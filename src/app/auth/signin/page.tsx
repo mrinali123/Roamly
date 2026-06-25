@@ -98,7 +98,7 @@ export default function SignInPage() {
             <p style={{ fontSize: 42, fontWeight: 900, color: "white", lineHeight: 1.1, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)" }}>
               Not all those
             </p>
-            <p style={{ fontSize: 42, fontWeight: 900, lineHeight: 1.1, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)", background: "linear-gradient(135deg, #38BDF8, #818CF8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+            <p style={{ fontSize: 42, fontWeight: 900, lineHeight: 1.1, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)", color: "#38BDF8" }}>
               who wander
             </p>
             <p style={{ fontSize: 42, fontWeight: 900, color: "white", lineHeight: 1.1, letterSpacing: "-0.03em", fontFamily: "var(--font-playfair, Georgia, serif)" }}>

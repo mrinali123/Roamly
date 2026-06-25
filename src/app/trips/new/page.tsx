@@ -113,7 +113,7 @@ function GeneratingScreen({ status, progress }: { status: string; progress: numb
 
       {/* Ambient orbs */}
       <div aria-hidden="true" style={{ position: "absolute", top: "8%", right: "6%", width: 500, height: 500, borderRadius: "50%", background: "rgba(56,189,248,0.06)", filter: "blur(100px)", pointerEvents: "none" }} />
-      <div aria-hidden="true" style={{ position: "absolute", bottom: "8%", left: "4%", width: 380, height: 380, borderRadius: "50%", background: "rgba(168,85,247,0.05)", filter: "blur(80px)", pointerEvents: "none" }} />
+      <div aria-hidden="true" style={{ position: "absolute", bottom: "8%", left: "4%", width: 380, height: 380, borderRadius: "50%", background: "rgba(56,189,248,0.03)", filter: "blur(80px)", pointerEvents: "none" }} />
       <div aria-hidden="true" style={{ position: "absolute", top: "45%", left: "18%", width: 220, height: 220, borderRadius: "50%", background: "rgba(245,158,11,0.04)", filter: "blur(60px)", pointerEvents: "none" }} />
 
       {/* 3D Globe */}
@@ -124,8 +124,8 @@ function GeneratingScreen({ status, progress }: { status: string; progress: numb
         {/* Orbit ring 1 — sky blue, near-horizontal */}
         <div style={{ position: "absolute", top: "50%", left: "50%", width: 224, height: 224, marginLeft: -112, marginTop: -112, borderRadius: "50%", border: "2px solid rgba(56,189,248,0.7)", boxShadow: "0 0 18px rgba(56,189,248,0.3)", animation: "gs-orbit1 3.6s linear infinite" }} />
 
-        {/* Orbit ring 2 — purple */}
-        <div style={{ position: "absolute", top: "50%", left: "50%", width: 182, height: 182, marginLeft: -91, marginTop: -91, borderRadius: "50%", border: "1.5px solid rgba(168,85,247,0.65)", boxShadow: "0 0 14px rgba(168,85,247,0.25)", animation: "gs-orbit2 2.7s linear infinite" }} />
+        {/* Orbit ring 2 — amber */}
+        <div style={{ position: "absolute", top: "50%", left: "50%", width: 182, height: 182, marginLeft: -91, marginTop: -91, borderRadius: "50%", border: "1.5px solid rgba(245,158,11,0.5)", boxShadow: "0 0 14px rgba(245,158,11,0.18)", animation: "gs-orbit2 2.7s linear infinite" }} />
 
         {/* Orbit ring 3 — amber, perpendicular */}
         <div style={{ position: "absolute", top: "50%", left: "50%", width: 140, height: 140, marginLeft: -70, marginTop: -70, borderRadius: "50%", border: "1.5px solid rgba(245,158,11,0.55)", boxShadow: "0 0 12px rgba(245,158,11,0.18)", animation: "gs-orbit3 4.8s linear infinite" }} />
@@ -137,7 +137,7 @@ function GeneratingScreen({ status, progress }: { status: string; progress: numb
 
         {/* Satellite dot on ring 2 */}
         <div style={{ position: "absolute", top: "50%", left: "50%", width: 182, height: 182, marginLeft: -91, marginTop: -91, borderRadius: "50%", animation: "gs-dot2 2.7s linear infinite" }}>
-          <div style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", width: 8, height: 8, borderRadius: "50%", background: "#A855F7", boxShadow: "0 0 14px rgba(168,85,247,1), 0 0 24px rgba(168,85,247,0.6)" }} />
+          <div style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", width: 8, height: 8, borderRadius: "50%", background: "#F59E0B", boxShadow: "0 0 14px rgba(245,158,11,0.9), 0 0 24px rgba(245,158,11,0.5)" }} />
         </div>
 
         {/* Central sphere */}
@@ -156,7 +156,7 @@ function GeneratingScreen({ status, progress }: { status: string; progress: numb
         {status}
       </p>
       <div style={{ width: 240, height: 3, borderRadius: 99, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <div style={{ height: "100%", borderRadius: 99, width: `${progress}%`, background: "linear-gradient(90deg, #38BDF8, #A855F7, #F59E0B)", transition: "width 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+        <div style={{ height: "100%", borderRadius: 99, width: `${progress}%`, background: "linear-gradient(90deg, #38BDF8, #0EA5E9)", transition: "width 1.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
       </div>
       <p style={{ marginTop: 16, fontSize: 12, color: "rgba(255,255,255,0.2)" }}>This may take 15–30 seconds</p>
     </div>
@@ -418,7 +418,7 @@ function Step2({ data, onChange, errors, hotelConfirmed, hotelAutoFilledAddress,
 
 function Step3({ data, onChange, errors }: StepProps) {
   const paces: { value: Pace; label: string; sub: string; accent: string; Icon: LucideIcon }[] = [
-    { value: "relaxed",  label: "Relaxed",  sub: "2–3 places/day", accent: "#A855F7", Icon: Coffee },
+    { value: "relaxed",  label: "Relaxed",  sub: "2–3 places/day", accent: "#10B981", Icon: Coffee },
     { value: "balanced", label: "Balanced", sub: "4–5 places/day", accent: "#38BDF8", Icon: Compass },
     { value: "packed",   label: "Packed",   sub: "6+ places/day",  accent: "#F59E0B", Icon: Zap },
   ];
@@ -934,9 +934,9 @@ export default function NewTripPage() {
         }
         .nf-interest:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.82); }
         .nf-interest.selected {
-          background: linear-gradient(135deg, rgba(56,189,248,0.14), rgba(139,92,246,0.14));
+          background: rgba(56,189,248,0.12);
           border-color: rgba(56,189,248,0.48); color: white;
-          box-shadow: 0 0 14px rgba(56,189,248,0.13); transform: scale(1.02);
+          box-shadow: 0 0 14px rgba(56,189,248,0.10); transform: scale(1.02);
         }
 
         /* Dietary pills */

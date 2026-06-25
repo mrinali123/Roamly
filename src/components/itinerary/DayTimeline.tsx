@@ -48,7 +48,7 @@ export default function DayTimeline({ day, weatherHourly }: DayTimelineProps) {
         {/* Vertical line */}
         <div style={{
           position: "absolute", left: 12, top: 0, bottom: 0, width: 1,
-          background: "linear-gradient(to bottom, transparent, rgba(56,189,248,0.3) 10%, rgba(139,92,246,0.25) 50%, rgba(56,189,248,0.2) 90%, transparent)",
+          background: "linear-gradient(to bottom, transparent, rgba(56,189,248,0.3) 10%, rgba(56,189,248,0.2) 90%, transparent)",
         }} aria-hidden="true">
           {/* Animated traveling dot */}
           <div style={{
