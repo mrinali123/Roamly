@@ -1,9 +1,13 @@
 # Navoryn
 
+> AI travel planner with a deterministic validation layer that converts probabilistic LLM output into structured, physically feasible itineraries before database storage.
+
 **Most AI travel tools generate an itinerary and call it done.**  
 **Navoryn generates one, then runs it through a deterministic constraint engine that checks scheduling conflicts, missing meals, and physical feasibility before anything reaches the database.**
 
 Built with Next.js 14, Groq, Supabase, and a custom post-AI validation layer — this is a full-stack engineering project, not a GPT wrapper.
+
+Transforms LLM-generated travel plans into production-safe, constraint-validated itineraries with real-world feasibility guarantees.
 
 **[Live Demo →](https://navoryn.vercel.app)** · 🎥 **[Watch Demo Video](#)** ← _replace `#` with Loom / YouTube link_
 
@@ -42,6 +46,7 @@ Navoryn treats LLM output as untrusted input. After generation, a five-rule dete
 | Meal completeness | Injects missing breakfast / lunch / dinner entries with fallback data when the model omits them |
 | Structural integrity | Flags any day with zero remaining places and triggers automatic regeneration |
 | Travel feasibility | Checks that consecutive geocoded places are physically reachable within the scheduled time gap, at a conservative 40 km/h city speed |
+| End result | Fully structured, time-consistent, geographically valid itineraries stored safely in DB |
 
 This is the project's core engineering contribution. The constraint engine is what separates it from "AI generates text, display text" — every saved itinerary is structurally valid, geographically grounded, and time-consistent.
 
@@ -56,6 +61,8 @@ This is the project's core engineering contribution. The constraint engine is wh
 ### Constraint Engine
 - **Post-AI validation layer** — five deterministic rules run between LLM output and DB write: deduplication, time window repair, meal injection, structural integrity check, and travel feasibility guard
 - **Auto-repair + retry** — violations are fixed automatically where possible; structurally broken days trigger one automatic regeneration attempt before surfacing an error
+
+This layer ensures AI output is never directly trusted or persisted.
 
 ### Geospatial Layer
 - **Interactive map** — Leaflet map with numbered pins per place; real-road routing between stops via OSRM (not straight lines)
@@ -72,6 +79,8 @@ This is the project's core engineering contribution. The constraint engine is wh
 ---
 
 ## Demo Flow
+
+> Recommended: watch the demo video first before reading steps.
 
 The live demo is open — sign up free to generate itineraries (uses Groq's free tier).
 
