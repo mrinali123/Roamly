@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { cacheTrip, getCachedTrip, getCachedTripsMeta } from "@/lib/offline-cache";
 import type { TripWithDays } from "@/types/trip";
 
