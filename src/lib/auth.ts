@@ -5,7 +5,8 @@ export type AuthError = { message: string };
 export async function signUp(
   email: string,
   password: string,
-  fullName: string
+  fullName: string,
+  emailRedirectTo?: string
 ): Promise<{ error: AuthError | null }> {
   const supabase = createClient();
   const { error } = await supabase.auth.signUp({
@@ -13,7 +14,10 @@ export async function signUp(
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      // Always derive the base URL from the browser so production deployments
+      // never embed localhost. Callers may pass a full URL (e.g. with ?next=)
+      // to thread a post-confirmation redirect through the callback route.
+      emailRedirectTo: emailRedirectTo ?? `${window.location.origin}/auth/callback`,
     },
   });
   return { error: error ? { message: error.message } : null };

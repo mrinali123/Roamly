@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -9,6 +9,12 @@ import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { signIn } from "@/lib/auth";
 
 interface FormErrors { email?: string; password?: string; }
+
+// Only allow relative paths to prevent open-redirect attacks.
+function safeRedirect(r: string): string {
+  if (r.startsWith("/") && !r.startsWith("//")) return r;
+  return "/dashboard";
+}
 
 const CompassLogo = () => (
   <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
@@ -27,8 +33,12 @@ const DEST_PILLS = [
   { city: "Bali",      img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=100&q=80" },
 ];
 
-export default function SignInPage() {
+function SignInPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Preserve the invite / post-auth redirect through the signin flow.
+  const redirectTo = searchParams.get("redirect") ?? "";
+
   const [loading,  setLoading]  = useState(false);
   const [fields,   setFields]   = useState({ email: "", password: "" });
   const [errors,   setErrors]   = useState<FormErrors>({});
@@ -51,7 +61,7 @@ export default function SignInPage() {
     const { error } = await signIn(fields.email, fields.password);
     setLoading(false);
     if (error) { toast.error(error.message); return; }
-    router.push("/dashboard");
+    router.push(redirectTo ? safeRedirect(redirectTo) : "/dashboard");
     router.refresh();
   }
 
@@ -67,6 +77,10 @@ export default function SignInPage() {
       boxShadow: hasError ? "0 0 0 3px rgba(239,68,68,0.08)" : focused ? "0 0 0 3px rgba(56,189,248,0.10)" : "none",
     };
   }
+
+  const signupHref = redirectTo
+    ? `/auth/signup?redirect=${encodeURIComponent(redirectTo)}`
+    : "/auth/signup";
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", background: "#060914" }}>
@@ -234,7 +248,7 @@ export default function SignInPage() {
             {/* Sign up link */}
             <p style={{ textAlign: "center", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
               Don&apos;t have an account?{" "}
-              <Link href="/auth/signup" style={{ color: "#38BDF8", fontWeight: 600, textDecoration: "none" }}
+              <Link href={signupHref} style={{ color: "#38BDF8", fontWeight: 600, textDecoration: "none" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = "underline"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = "none"; }}
               >
@@ -247,5 +261,13 @@ export default function SignInPage() {
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInPageContent />
+    </Suspense>
   );
 }

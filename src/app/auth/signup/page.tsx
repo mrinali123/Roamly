@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -22,8 +22,12 @@ const CompassLogo = () => (
   </svg>
 );
 
-export default function SignUpPage() {
+function SignUpPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Preserve the invite / post-auth redirect through the entire signup → confirm → signin flow
+  const redirectTo = searchParams.get("redirect") ?? "";
+
   const [loading, setLoading] = useState(false);
   const [fields,  setFields]  = useState({ fullName: "", email: "", password: "", confirmPassword: "" });
   const [errors,  setErrors]  = useState<FormErrors>({});
@@ -47,7 +51,20 @@ export default function SignUpPage() {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    const { error } = await signUp(fields.email, fields.password, fields.fullName);
+
+    // Build the confirmation callback URL. Embed the post-auth destination in
+    // ?next= so the callback route returns the user to the right place after
+    // email confirmation (e.g. /invite/<token>). Always derived from the
+    // current browser origin — never a hardcoded or env-var URL.
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    if (redirectTo) callbackUrl.searchParams.set("next", redirectTo);
+
+    const { error } = await signUp(
+      fields.email,
+      fields.password,
+      fields.fullName,
+      callbackUrl.toString()
+    );
     setLoading(false);
     if (error) {
       const msg = error.message?.toLowerCase() ?? "";
@@ -61,7 +78,13 @@ export default function SignUpPage() {
       return;
     }
     toast.success("Account created! Check your email to verify your account.", { duration: 6000 });
-    router.push("/auth/signin");
+    // Send the user to sign-in, carrying the redirect so they land in the
+    // right place after signing in (in case they don't use the email link).
+    router.push(
+      redirectTo
+        ? `/auth/signin?redirect=${encodeURIComponent(redirectTo)}`
+        : "/auth/signin"
+    );
   }
 
   const strength = getStrength(fields.password);
@@ -78,6 +101,10 @@ export default function SignUpPage() {
       boxShadow: hasError ? "0 0 0 3px rgba(239,68,68,0.08)" : focused ? "0 0 0 3px rgba(56,189,248,0.10)" : "none",
     };
   }
+
+  const signinHref = redirectTo
+    ? `/auth/signin?redirect=${encodeURIComponent(redirectTo)}`
+    : "/auth/signin";
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", background: "#060914" }}>
@@ -197,7 +224,7 @@ export default function SignUpPage() {
             {/* Sign in link */}
             <p style={{ textAlign: "center", fontSize: 14, color: "rgba(255,255,255,0.4)" }}>
               Already have an account?{" "}
-              <Link href="/auth/signin" style={{ color: "#38BDF8", fontWeight: 600, textDecoration: "none" }}
+              <Link href={signinHref} style={{ color: "#38BDF8", fontWeight: 600, textDecoration: "none" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = "underline"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = "none"; }}>
                 Sign in
@@ -239,5 +266,13 @@ export default function SignUpPage() {
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpPageContent />
+    </Suspense>
   );
 }
