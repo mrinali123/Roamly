@@ -14,8 +14,9 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  // tile.openstreetmap.org: Leaflet map tiles; unpkg.com: Leaflet default marker icons
-  "img-src 'self' data: blob: https://images.unsplash.com https://tile.openstreetmap.org https://unpkg.com",
+  // Tiles are proxied via /tiles/* (same-origin), so no external tile domain is needed here.
+  // unpkg.com: Leaflet default marker-icon fallback images
+  "img-src 'self' data: blob: https://images.unsplash.com https://unpkg.com",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.open-meteo.com https://nominatim.openstreetmap.org https://photon.komoot.io https://router.project-osrm.org",
   "font-src 'self'",
   "frame-src 'none'",
@@ -30,6 +31,15 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
+  },
+  // Proxy OSM map tiles through the same origin so img-src 'self' covers them.
+  async rewrites() {
+    return [
+      {
+        source: "/tiles/:z/:x/:y",
+        destination: "https://tile.openstreetmap.org/:z/:x/:y",
+      },
+    ];
   },
   async headers() {
     return [

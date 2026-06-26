@@ -94,7 +94,7 @@ export default function TripMap({ trip, activeDayIndex }: TripMapProps) {
       }).setView([20, 0], 2);
 
       L.tileLayer(
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "/tiles/{z}/{x}/{y}.png",
         {
           attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
