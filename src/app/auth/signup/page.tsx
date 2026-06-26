@@ -1,12 +1,12 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { User, Mail, Lock, ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react";
-import { signUp } from "@/lib/auth";
+import { User, Mail, Lock, ShieldCheck, Eye, EyeOff, Loader2, CheckCircle2, RefreshCw, AlertTriangle } from "lucide-react";
+import { signUp, resendConfirmationEmail } from "@/lib/auth";
 import { getStrength } from "@/lib/password";
 
 interface FormErrors { fullName?: string; email?: string; password?: string; confirmPassword?: string; }
@@ -23,7 +23,6 @@ const CompassLogo = () => (
 );
 
 function SignUpPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   // Preserve the invite / post-auth redirect through the entire signup → confirm → signin flow
   const redirectTo = searchParams.get("redirect") ?? "";
@@ -33,6 +32,17 @@ function SignUpPageContent() {
   const [errors,  setErrors]  = useState<FormErrors>({});
   const [showPw,  setShowPw]  = useState(false);
   const [focusField, setFocusField] = useState<string | null>(null);
+
+  // Post-submit "check your inbox" state
+  const [sent, setSent]           = useState(false);
+  const [sentEmail, setSentEmail] = useState("");
+  const [resendCountdown, setResendCountdown] = useState(0);
+
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const t = setTimeout(() => setResendCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCountdown]);
 
   function validate(): boolean {
     const next: FormErrors = {};
@@ -77,14 +87,31 @@ function SignUpPageContent() {
       }
       return;
     }
-    toast.success("Account created! Check your email to verify your account.", { duration: 6000 });
-    // Send the user to sign-in, carrying the redirect so they land in the
-    // right place after signing in (in case they don't use the email link).
-    router.push(
-      redirectTo
-        ? `/auth/signin?redirect=${encodeURIComponent(redirectTo)}`
-        : "/auth/signin"
-    );
+    // Show inline "check your inbox" state instead of navigating away so the
+    // user can resend if the email lands in spam or takes too long.
+    setSentEmail(fields.email);
+    setSent(true);
+    setResendCountdown(60);
+  }
+
+  async function handleResend() {
+    if (resendCountdown > 0 || loading) return;
+    setLoading(true);
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    if (redirectTo) callbackUrl.searchParams.set("next", redirectTo);
+    const { error } = await resendConfirmationEmail(sentEmail, callbackUrl.toString());
+    setLoading(false);
+    if (error) {
+      const msg = error.message?.toLowerCase() ?? "";
+      if (msg.includes("rate limit") || msg.includes("too many")) {
+        toast.error("Too many attempts. Please wait a few minutes before trying again.", { duration: 8000 });
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+    setResendCountdown(60);
+    toast.success("Confirmation email resent!");
   }
 
   const strength = getStrength(fields.password);
@@ -129,6 +156,65 @@ function SignUpPageContent() {
             </Link>
           </div>
 
+          {sent ? (
+            /* ── Check-your-inbox state ── */
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.25)", marginBottom: 28 }}>
+                <CheckCircle2 size={28} color="#38BDF8" />
+              </div>
+
+              <h1 style={{ fontSize: 30, fontWeight: 900, color: "white", letterSpacing: "-0.025em", lineHeight: 1.1, fontFamily: "var(--font-playfair, Georgia, serif)" }}>
+                Check your inbox
+              </h1>
+              <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginTop: 10, lineHeight: 1.6 }}>
+                We sent a confirmation link to{" "}
+                <span style={{ color: "white", fontWeight: 600 }}>{sentEmail}</span>.
+                Click it to activate your account.
+              </p>
+
+              {/* Spam advisory */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginTop: 20, padding: "14px 16px", borderRadius: 12, background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)" }}>
+                <AlertTriangle size={15} color="#FBBF24" style={{ flexShrink: 0, marginTop: 1 }} />
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", margin: 0, lineHeight: 1.5 }}>
+                  Not seeing it? Check your <strong style={{ color: "rgba(255,255,255,0.75)" }}>Spam</strong> or{" "}
+                  <strong style={{ color: "rgba(255,255,255,0.75)" }}>Junk</strong> folder — confirmation emails sometimes land there.
+                </p>
+              </div>
+
+              {/* Resend button */}
+              <button
+                onClick={handleResend}
+                disabled={resendCountdown > 0 || loading}
+                style={{
+                  marginTop: 24, width: "100%", height: 48, borderRadius: 12,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  background: resendCountdown > 0 ? "rgba(255,255,255,0.03)" : "rgba(56,189,248,0.08)",
+                  border: `1px solid ${resendCountdown > 0 ? "rgba(255,255,255,0.08)" : "rgba(56,189,248,0.25)"}`,
+                  color: resendCountdown > 0 ? "rgba(255,255,255,0.25)" : "#38BDF8",
+                  fontSize: 14, fontWeight: 500, cursor: resendCountdown > 0 ? "not-allowed" : "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                {loading ? (
+                  <Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} />
+                ) : (
+                  <RefreshCw size={15} />
+                )}
+                {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend confirmation email"}
+              </button>
+
+              <p style={{ textAlign: "center", fontSize: 14, color: "rgba(255,255,255,0.3)", marginTop: 20 }}>
+                Already confirmed?{" "}
+                <Link href={signinHref} style={{ color: "#38BDF8", fontWeight: 600, textDecoration: "none" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = "underline"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.textDecoration = "none"; }}>
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          ) : (
+            /* ── Signup form ── */
+            <>
           {/* Heading */}
           <h1 style={{ fontSize: 34, fontWeight: 900, color: "white", letterSpacing: "-0.025em", lineHeight: 1.1, fontFamily: "var(--font-playfair, Georgia, serif)" }}>
             Create your account
@@ -231,6 +317,8 @@ function SignUpPageContent() {
               </Link>
             </p>
           </form>
+            </>
+          )}
         </div>
       </div>
 

@@ -54,3 +54,18 @@ export async function updatePassword(
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   return { error: error ? { message: error.message } : null };
 }
+
+export async function resendConfirmationEmail(
+  email: string,
+  emailRedirectTo?: string
+): Promise<{ error: AuthError | null }> {
+  const supabase = createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: emailRedirectTo ?? `${window.location.origin}/auth/callback`,
+    },
+  });
+  return { error: error ? { message: error.message } : null };
+}
