@@ -1,10 +1,73 @@
-# Roamly
+# Navoryn
 
-A full-stack AI travel planning application that converts user trip preferences into structured, time-aware itineraries using a Groq LLM, then validates and repairs that output through a deterministic constraint engine before persisting it to a Supabase PostgreSQL backend.
+**Most AI travel tools generate an itinerary and call it done.**  
+**Navoryn generates one, then runs it through a deterministic constraint engine that checks scheduling conflicts, missing meals, and physical feasibility before anything reaches the database.**
 
-> Unlike most AI travel tools that trust LLM output directly, Roamly enforces a deterministic constraint engine between generation and storage. Every itinerary is validated and auto-repaired for scheduling conflicts, missing meals, and spatial feasibility before any data reaches the database — making the output reliable enough to drive a real UI.
+Built with Next.js 14, Groq, Supabase, and a custom post-AI validation layer — this is a full-stack engineering project, not a GPT wrapper.
 
-**[Live Demo →](https://roamly-ten.vercel.app)**
+**[Live Demo →](https://navoryn.vercel.app)** · 🎥 **[Watch Demo Video](#)** ← _replace `#` with Loom / YouTube link_
+
+---
+
+## Screenshots
+
+| Dashboard | Trip View — Day Timeline |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Day Timeline](docs/screenshots/day-timeline.png) |
+
+| Interactive Map (OSRM routing) | Budget Tracker |
+|---|---|
+| ![Map](docs/screenshots/map.png) | ![Budget](docs/screenshots/budget.png) |
+
+> _Add real captures to `docs/screenshots/` before publishing._
+
+---
+
+## What Navoryn Does
+
+You fill out a 3-step form — destination, hotel, dates, pace, and interests. Navoryn calls a Groq LLM and streams the generation live via Server-Sent Events, so you see real progress instead of a spinner. Once generated, the itinerary passes through a deterministic validation pipeline before it's saved — then you're dropped into a day-by-day trip view with an interactive road-routing map, AI chat assistant, weather overlay, budget tracker, PDF export, and a shareable public link.
+
+---
+
+## Why It's Different
+
+LLM outputs are probabilistic. A language model generating a travel itinerary might schedule a restaurant at 9 AM, place the same museum twice on the same day, or suggest a location 300 km outside the destination.
+
+Navoryn treats LLM output as untrusted input. After generation, a five-rule deterministic constraint engine intercepts every response before the database sees it:
+
+| Rule | What it fixes |
+|---|---|
+| Deduplication | Removes repeated place names within the same day |
+| Time window repair | Repositions activities that fall outside valid hours per place type (landmarks at golden hours, restaurants at meal windows, etc.) |
+| Meal completeness | Injects missing breakfast / lunch / dinner entries with fallback data when the model omits them |
+| Structural integrity | Flags any day with zero remaining places and triggers automatic regeneration |
+| Travel feasibility | Checks that consecutive geocoded places are physically reachable within the scheduled time gap, at a conservative 40 km/h city speed |
+
+This is the project's core engineering contribution. The constraint engine is what separates it from "AI generates text, display text" — every saved itinerary is structurally valid, geographically grounded, and time-consistent.
+
+---
+
+## Features
+
+### AI System
+- **AI itinerary generation** — Groq-powered (`llama-3.1-8b-instant`), streams progress via SSE; respects arrival/departure times, hotel check-in/out, pace, budget, interests, dietary needs, and must-visit places
+- **AI chat assistant** — trip-scoped Groq chat with the full itinerary injected as system prompt; understands context like "what if it rains on Day 2?"
+
+### Constraint Engine
+- **Post-AI validation layer** — five deterministic rules run between LLM output and DB write: deduplication, time window repair, meal injection, structural integrity check, and travel feasibility guard
+- **Auto-repair + retry** — violations are fixed automatically where possible; structurally broken days trigger one automatic regeneration attempt before surfacing an error
+
+### Geospatial Layer
+- **Interactive map** — Leaflet map with numbered pins per place; real-road routing between stops via OSRM (not straight lines)
+- **Geocoding** — Photon (Komoot) primary with Nominatim fallback; Haversine guard rejects coordinates more than 150 km from the city center
+- **Weather overlay** — per-day forecast from Open-Meteo with 1-hour Supabase cache
+
+### Data & Infrastructure
+- **Budget tracker** — log expenses by category, visualise spending with Recharts
+- **Trip sharing** — public share link or email-invite collaborators (Gmail SMTP + Resend fallback)
+- **PDF export** — server-side generation via `@react-pdf/renderer`; branded cover page, per-day sections, and tips page
+- **Offline access** — PWA with localStorage (15-trip LRU) + IndexedDB cache; saved itineraries readable without internet
+- **Collaboration** — RLS-secured multi-user access with role-based permissions (viewer / editor); invite tokens as the sole auth secret
 
 ---
 
@@ -53,20 +116,6 @@ flowchart TD
     style H fill:#0f2a1f,stroke:#10B981,color:#fff
     style C fill:#1f1040,stroke:#a78bfa,color:#fff
 ```
-
----
-
-## Features
-
-- **AI itinerary generation** — Groq-powered (`llama-3.1-8b-instant`), streams progress via SSE; respects arrival/departure times, hotel check-in/out, pace, budget, interests, dietary needs, and must-visit places
-- **Constraint engine** — deterministic post-AI validation: deduplicates places, enforces meal window completeness, repairs time window violations, flags structurally broken days for automatic regeneration
-- **Day-by-day view** — per-day weather forecast, sightseeing places with GPS coordinates and timing rationale, restaurant picks, and quick tips
-- **Interactive map** — Leaflet map with numbered pins per place; real-road routing between stops via OSRM
-- **Budget tracker** — log expenses by category, visualise spending with Recharts
-- **Trip sharing** — public share link or email-invite collaborators (Gmail SMTP + Resend fallback)
-- **AI chat assistant** — trip-scoped Groq chat with full itinerary context injected as system prompt
-- **PDF export** — server-side PDF generation via `@react-pdf/renderer`
-- **Offline access** — PWA with localStorage (15-trip LRU) + IndexedDB cache; saved itineraries readable without internet
 
 ---
 
@@ -169,8 +218,8 @@ Every API route is wrapped in a `withLogger` higher-order function that creates 
 ### Install
 
 ```bash
-git clone https://github.com/mrinali123/Roamly.git
-cd Roamly
+git clone https://github.com/mrinali123/Navoryn.git
+cd Navoryn
 npm install
 ```
 
@@ -180,15 +229,17 @@ npm install
 cp .env.local.example .env.local
 ```
 
-| Variable | Where to get it |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` for local dev |
-| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) |
-| `RESEND_API_KEY` | [resend.com](https://resend.com) — optional, for invite emails |
-| `GMAIL_USER` | Your Gmail address — for invite emails via SMTP |
-| `GMAIL_APP_PASSWORD` | Google Account → Security → App Passwords |
+| Variable | Required | Where to get it |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ Required | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ Required | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_APP_URL` | ✅ Required | `http://localhost:3000` for local dev |
+| `GROQ_API_KEY` | ✅ Required | [console.groq.com](https://console.groq.com) (free tier works) |
+| `RESEND_API_KEY` | ⚙️ Optional | [resend.com](https://resend.com) — only needed for collaborator invite emails |
+| `GMAIL_USER` | ⚙️ Optional | Your Gmail address — only needed for invite emails via SMTP |
+| `GMAIL_APP_PASSWORD` | ⚙️ Optional | Google Account → Security → App Passwords — only needed for invite emails |
+
+> **Note:** The core app (trip generation, maps, chat, PDF export, offline mode) works fully without the email variables. Email is only needed for the "invite collaborator" feature.
 
 ### Database
 
